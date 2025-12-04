@@ -112,7 +112,7 @@ async function handleSave() {
       style="width: 28rem; background-color: #fabf13; color: black"
     >
       <div class="flex items-center gap-4 mb-4">
-        <label for="nombre" class="font-semibold w-3">Nombre</label>
+        <label for="nombre" class="font-semibold w-3">Nombregfdhdfjfver</label>
         <InputText
           id="nombre"
           v-model="categoria.nombre"
@@ -125,7 +125,7 @@ async function handleSave() {
       </div>
 
       <div class="flex items-center gap-4 mb-4">
-        <label for="descripcion" class="font-semibold w-3">Descripción</label>
+        <label for="descripcion" class="font-semibold w-3">Descripciónfeheghaeha</label>
         <Textarea
           id="descripcion"
           v-model="categoria.descripcion"
