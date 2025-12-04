@@ -27,6 +27,7 @@ const dialogVisible = computed({
 
 const producto = ref<Producto>({ ...props.producto })
 const idCategoria = ref<number>(0)
+const previewUrl = ref<string>('')
 
 watch(
   () => props.producto,
@@ -36,9 +37,43 @@ watch(
   },
 )
 
+watch(
+  () => props.mostrar,
+  (open) => {
+    if (open) {
+      obtenerCategorias()
+
+      if (props.producto?.id) {
+        // MODO EDICIÓN
+        producto.value = { ...props.producto }
+        idCategoria.value = props.producto.idCategoria ?? props.producto.categoria?.id ?? 0
+        previewUrl.value = ''   // limpiar preview
+      } else {
+        // MODO CREAR
+        producto.value = {
+          id: 0,
+          idCategoria: 0,
+          nombre: '',
+          descripcion: '',
+          precio: 0,
+          stock: 0,
+          imagenUrl: '',
+          categoria: { id: 0 } as Categoria,
+        }
+        idCategoria.value = 0
+        previewUrl.value = ''   // limpiar preview
+      }
+    } else {
+      previewUrl.value = ''
+    }
+  },
+)
+
 async function obtenerCategorias() {
   categorias.value = await http.get('categorias').then((r) => r.data)
 }
+
+
 
 /* async function onFileChange(e: Event) {
   const input = e.target as HTMLInputElement;
@@ -65,25 +100,23 @@ async function onFileChange(e: Event) {
   const input = e.target as HTMLInputElement
   const file = input.files?.[0]
 
-  console.log('Archivo seleccionado:', file)
-
   if (!file) return
+
+  // Vista previa instantánea
+  previewUrl.value = URL.createObjectURL(file)
 
   const fd = new FormData()
   fd.append('file', file)
 
   try {
-    // ← NO pongas headers aquí
     const { data } = await http.post('uploads', fd)
-
-    console.log('Respuesta del backend:', data)
 
     if (data?.url) {
       producto.value.imagenUrl = data.url
+      console.log('Imagen subida:', data.url)
     }
   } catch (err: any) {
     console.error('Error al subir imagen:', err)
-    console.error('Detalles:', err.response?.data)
     alert('No se pudo subir la imagen')
   }
 }
@@ -96,45 +129,22 @@ async function handleSave() {
       descripcion: producto.value.descripcion,
       precio: producto.value.precio,
       stock: producto.value.stock,
-      imagenUrl: producto.value.imagenUrl, // ← ya contiene la URL de la subida
+      imagenUrl: producto.value.imagenUrl || '',
     }
+
     if (props.modoEdicion) {
       await http.patch(`${ENDPOINT}/${producto.value.id}`, body)
     } else {
       await http.post(ENDPOINT, body)
     }
+
     emit('guardar')
-    producto.value = {} as Producto
     dialogVisible.value = false
   } catch (error: any) {
-    alert(error?.response?.data?.message)
+    alert(error?.response?.data?.message || 'Error al guardar')
   }
 }
 
-watch(
-  () => props.mostrar,
-  (open) => {
-    if (open) {
-      obtenerCategorias()
-      if (props.producto?.id) {
-        producto.value = { ...props.producto }
-        idCategoria.value = props.producto.idCategoria ?? props.producto.categoria?.id ?? 0
-      } else {
-        producto.value = {
-          id: 0,
-          idCategoria: 0,
-          nombre: '',
-          descripcion: '',
-          precio: 0,
-          stock: 0,
-          imagenUrl: '',
-          categoria: { id: 0 } as Categoria,
-        } as Producto
-        idCategoria.value = 0
-      }
-    }
-  },
-)
 </script>
 
 <template>
@@ -210,19 +220,19 @@ watch(
         />
       </div>
 
-      <!-- Subir imagen (único input visible) -->
+      <!-- SUBIR IMAGEN -->
       <div class="flex items-center gap-4 mb-4">
-        <label for="imagenFile" class="font-semibold w-3">Imagen</label>
-        <input id="imagenFile" type="file" accept="image/*" @change="onFileChange" />
+        <label class="font-semibold w-3">Imagen</label>
+        <input type="file" accept="image/*" @change="onFileChange" />
       </div>
 
-      <!-- Previsualización si ya hay URL (creación o edición) -->
-      <div v-if="producto.imagenUrl" class="mb-4">
+      <!-- PREVISUALIZACIÓN -->
+      <div class="mb-4 text-center" v-if="previewUrl || producto.imagenUrl">
         <img
-          :src="producto.imagenUrl"
-          alt="imagen producto"
-          style="width: 120px; border-radius: 6px"
+          :src="previewUrl || producto.imagenUrl"
+          style="width: 120px; height: 120px; object-fit: cover; border-radius: 6px"
         />
+        <p class="text-xs text-gray-500 mt-1">Vista previa</p>
       </div>
 
       <div class="flex justify-end gap-2">

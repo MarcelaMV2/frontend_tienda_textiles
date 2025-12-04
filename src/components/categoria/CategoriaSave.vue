@@ -28,30 +28,27 @@ const dialogVisible = computed({
 const categoria = ref<Categoria>({ ...props.categoria })
 
 watch(
-  () => props.categoria,
-  (newVal) => {
-    categoria.value = { ...newVal }
-  },
-)
-
-watch(
   () => props.mostrar,
   (open) => {
     if (open) {
       if (props.categoria?.id) {
         categoria.value = { ...props.categoria }
+        previewUrl.value = ''
       } else {
-        // Resetea para nuevo registro
         categoria.value = {
           id: 0,
           nombre: '',
           descripcion: '',
           imagenUrl: '',
         } as Categoria
+        previewUrl.value = ''
       }
+    } else {
+      previewUrl.value = ''
     }
   },
 )
+
 
 async function onFileChange(e: Event) {
   const input = e.target as HTMLInputElement;
@@ -112,7 +109,7 @@ async function handleSave() {
       style="width: 28rem; background-color: #fabf13; color: black"
     >
       <div class="flex items-center gap-4 mb-4">
-        <label for="nombre" class="font-semibold w-3">Nombregfdhdfjfver</label>
+        <label for="nombre" class="font-semibold w-3">Nombre</label>
         <InputText
           id="nombre"
           v-model="categoria.nombre"
@@ -125,7 +122,7 @@ async function handleSave() {
       </div>
 
       <div class="flex items-center gap-4 mb-4">
-        <label for="descripcion" class="font-semibold w-3">Descripciónfeheghaeha</label>
+        <label for="descripcion" class="font-semibold w-3">Descripción</label>
         <Textarea
           id="descripcion"
           v-model="categoria.descripcion"
