@@ -15,6 +15,9 @@ const props = defineProps({
 })
 const emit = defineEmits(['guardar', 'close'])
 
+const previewUrl = ref('');
+
+
 const dialogVisible = computed({
   get: () => props.mostrar,
   set: (value) => {
@@ -51,27 +54,29 @@ watch(
 )
 
 async function onFileChange(e: Event) {
-  const input = e.target as HTMLInputElement
-  const file = input.files?.[0]
+  const input = e.target as HTMLInputElement;
+  const file = input.files?.[0];
 
-  if (!file) return
+  if (!file) return;
 
-  const fd = new FormData()
-  fd.append('file', file)
+  // Vista previa local inmediata
+  previewUrl.value = URL.createObjectURL(file);
+
+  const fd = new FormData();
+  fd.append('file', file);
 
   try {
-    // No pongas Content-Type manualmente, axios lo detecta con FormData
-    const { data } = await http.post('uploads', fd)
-
+    const { data } = await http.post('uploads', fd);
     if (data?.url) {
-      categoria.value.imagenUrl = data.url
-      console.log('Imagen subida:', data.url)
+      categoria.value.imagenUrl = data.url;
+      console.log('Imagen subida:', data.url);
     }
   } catch (err: any) {
-    console.error('Error al subir imagen:', err)
-    alert(err?.response?.data?.message || 'No se pudo subir la imagen')
+    console.error('Error al subir imagen:', err);
+    alert(err?.response?.data?.message || 'No se pudo subir la imagen');
   }
 }
+
 
 async function handleSave() {
   try {
@@ -139,14 +144,16 @@ async function handleSave() {
       </div>
 
       <!-- Previsualización -->
-      <div v-if="categoria.imagenUrl" class="mb-4 text-center">
+      <!-- Mostrar vista previa local si existe -->
+      <div class="mb-4 text-center" v-if="previewUrl || categoria.imagenUrl">
         <img
-          :src="categoria.imagenUrl"
+          :src="previewUrl || categoria.imagenUrl"
           alt="imagen categoría"
           style="width: 120px; height: 120px; object-fit: cover; border-radius: 6px"
         />
         <p class="text-xs text-gray-500 mt-1">Vista previa</p>
       </div>
+
 
       <div class="flex justify-end gap-2">
         <Button
